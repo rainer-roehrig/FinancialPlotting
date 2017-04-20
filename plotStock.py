@@ -12,15 +12,17 @@ import matplotlib
 import pylab
 import argparse
 import array as array
+import os
+
 matplotlib.rcParams.update({'font.size': 9})
 
 def rsiFunc(prices, n=14):
     deltas = np.diff(prices)
-    seed = deltas[:n+1]
-    up = seed[seed>=0].sum()/n
-    down = -seed[seed<0].sum()/n
-    rs = up/down
-    rsi = np.zeros_like(prices)
+    seed   = deltas[:n+1]
+    up     = seed[seed>=0].sum()/n
+    down   = -seed[seed<0].sum()/n
+    rs     = up/down
+    rsi     = np.zeros_like(prices)
     rsi[:n] = 100. - 100./(1.+rs)
 
     for i in range(n, len(prices)):
@@ -38,6 +40,7 @@ def rsiFunc(prices, n=14):
         rs = up/down
         rsi[i] = 100. - 100./(1.+rs)
 
+    print rsi
     return rsi
 
 def movingaverage(values,window):
@@ -151,7 +154,7 @@ def graphData(stock,timeHistory,offlineMode,showGUI,MA1,MA2):
         ax1.tick_params(axis='y', colors='w')
         plt.gca().yaxis.set_major_locator(mticker.MaxNLocator(prune='upper'))
         ax1.tick_params(axis='x', colors='w')
-        plt.ylabel('Stock price')
+        plt.ylabel('Stock price [USD]')
 
         maLeg = plt.legend(loc=9, ncol=2, prop={'size':7},
                    fancybox=True, borderaxespad=0.)
@@ -171,7 +174,7 @@ def graphData(stock,timeHistory,offlineMode,showGUI,MA1,MA2):
         ax1v.spines['top'].set_color("#5998ff")
         ax1v.spines['left'].set_color("#5998ff")
         ax1v.spines['right'].set_color("#5998ff")
-        ax1v.set_ylabel('Volume', color='w')
+        ax1v.set_ylabel('Volume [USD]', color='w')
         ax1v.tick_params(axis='x', colors='w')
         ax1v.tick_params(axis='y', colors='w')
 
@@ -195,9 +198,6 @@ def graphData(stock,timeHistory,offlineMode,showGUI,MA1,MA2):
         ax0.tick_params(axis='y', colors='w')
         ax0.tick_params(axis='x', colors='w')
         plt.ylabel('RSI')
-
-
-
 
         ax2 = plt.subplot2grid((6,4), (5,0), sharex=ax1, rowspan=1, colspan=4, axisbg='#07000d')
         fillcolor = '#00ffe8'
@@ -230,17 +230,21 @@ def graphData(stock,timeHistory,offlineMode,showGUI,MA1,MA2):
         plt.setp(ax0.get_xticklabels(), visible=False)
         plt.setp(ax1.get_xticklabels(), visible=False)
 
-        ax1.annotate('Big news!',(date[y-10],Av1[y-10]),
-            xytext=(0.8, 0.9), textcoords='axes fraction',
-            arrowprops=dict(facecolor='white', shrink=0.05),
-            fontsize=14, color = 'w',
-            horizontalalignment='right', verticalalignment='bottom')
+        bbox_props = dict(boxstyle='round',fc='w', ec='k',lw=1)
+        ax1.annotate("Last price:\n"+str(closep[-1]),(date[-1],closep[-1]), xytext=(date[-1]-40,closep[-1]+1),fontsize=8,bbox=bbox_props)
 
-        plt.subplots_adjust(left=.09, bottom=.14, right=.93, top=.95, wspace=.20, hspace=.1)
+        # ax1.annotate('Big news!',(date[y-10],Av1[y-10]),
+        #     xytext=(0.8, 0.9), textcoords='axes fraction',
+        #     arrowprops=dict(facecolor='white', shrink=0.05),
+        #     fontsize=14, color = 'w',
+        #     horizontalalignment='right', verticalalignment='bottom')
+
+        plt.subplots_adjust(left=.09, bottom=.14, right=.9, top=.95, wspace=.20, hspace=.1)
         if showGUI:
             plt.show()
         # fig.tight_layout()
-        fig.savefig('stock_'+stock+'.pdf',facecolor=fig.get_facecolor())
+        os.system("mkdir -p plots/")
+        fig.savefig('plots/stock_'+stock+'.pdf',facecolor=fig.get_facecolor())
 
     except Exception,e:
         print 'main loop',str(e)
@@ -251,7 +255,7 @@ if __name__=='__main__':
     parser.add_argument('-s','--stock', dest = 'stock', help = 'Stock you are interested',required=False,nargs='+',default=['EBAY'])
     parser.add_argument('-o','--offline', dest = 'offline', help = 'Stock you are interested: offline mode',action='store_true',default=False)
     parser.add_argument('--showGUI', dest = 'show',help = 'Get the interactiv matplotlib GUI',action='store_true',default=False)
-    parser.add_argument('-t','--time', dest = 'timeHistory', help = 'Time you are interest from now on, Stock you are interested, e.g. 1d, 1m, 1y',required=False,default='1y')
+    parser.add_argument('-t','--time', dest = 'timeHistory', help = 'Time you are interest from now on, Stock you are interested, e.g. 1d, 1m, 1y',required=False,default='3y')
     options = parser.parse_args()
 
     stocks       = options.stock
