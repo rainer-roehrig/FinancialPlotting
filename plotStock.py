@@ -65,21 +65,21 @@ def computeMACD(x, slow=26, fast=12):
     emafast = ExpMovingAverage(x, fast)
     return emaslow, emafast, emafast - emaslow
 
-def graphData(stock,timeHistory,offlineMode,MA1,MA2):
+def graphData(stock,timeHistory,offlineMode,showGUI,MA1,MA2):
     '''
         Use this to dynamically to pull a stock:
     '''
     try:
         stockList =[]
 
-        if offlineMode == "True":
+        if offlineMode:
             offFile = open('api_stock_EBAY_10y.txt', 'r')
             fileToRead = offFile.read()
             stock = "EBAY"
 
             print 'Reading',stock,'from offline file'
 
-        if offlineMode == False or offlineMode == "False":
+        else:
             urlToVisit = 'http://chartapi.finance.yahoo.com/instrument/1.0/'+str(stock)+'/chartdata;type=quote;range='+str(timeHistory)+'/csv'
             fileToRead = urllib2.urlopen(urlToVisit).read()
 
@@ -236,8 +236,9 @@ def graphData(stock,timeHistory,offlineMode,MA1,MA2):
             fontsize=14, color = 'w',
             horizontalalignment='right', verticalalignment='bottom')
 
-        plt.subplots_adjust(left=.09, bottom=.14, right=.93, top=.95, wspace=.20, hspace=0)
-        plt.show()
+        plt.subplots_adjust(left=.09, bottom=.14, right=.93, top=.95, wspace=.20, hspace=.1)
+        if showGUI:
+            plt.show()
         # fig.tight_layout()
         fig.savefig('stock_'+stock+'.pdf',facecolor=fig.get_facecolor())
 
@@ -247,17 +248,19 @@ def graphData(stock,timeHistory,offlineMode,MA1,MA2):
 if __name__=='__main__':
 
     parser = argparse.ArgumentParser(description = "Script to study a given stock curve")
-    parser.add_argument('-s','--stock', dest = 'stock', help = 'Stock you are interested',required=False,nargs='+',default=['BMW'])
-    parser.add_argument('-o','--offline', dest = 'offline', help = 'Stock you are interested: offline mode',required=False,default=False)
-    parser.add_argument('-t','--time', dest = 'timeHistory', help = 'Time you are interest from now on, Stock you are interested, e.g. 1m, 1y (days are not supported right now).',required=False,default='1y')
+    parser.add_argument('-s','--stock', dest = 'stock', help = 'Stock you are interested',required=False,nargs='+',default=['EBAY'])
+    parser.add_argument('-o','--offline', dest = 'offline', help = 'Stock you are interested: offline mode',action='store_true',default=False)
+    parser.add_argument('--showGUI', dest = 'show',help = 'Get the interactiv matplotlib GUI',action='store_true',default=False)
+    parser.add_argument('-t','--time', dest = 'timeHistory', help = 'Time you are interest from now on, Stock you are interested, e.g. 1d, 1m, 1y',required=False,default='1y')
     options = parser.parse_args()
 
     stocks       = options.stock
     timeHistory  = str(options.timeHistory)
     offlineMode  = options.offline
+    showGUI      = options.show
 
     #while True:
     # stock = raw_input('Stock to plot: ')
     #stock = 'BMW'
     for stock in stocks:
-        graphData(str(stock),timeHistory,offlineMode,10,50)
+        graphData(str(stock),timeHistory,offlineMode,showGUI,10,50)
